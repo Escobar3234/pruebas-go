@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clonar repositorio') {
             steps {
-                git url: 'https://github.com/golang/example.git', branch: 'master'
+                git url: 'https://github.com/Escobar3234/pruebas-go.git', branch: 'master'
             }
         }
 
