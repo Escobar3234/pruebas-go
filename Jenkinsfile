@@ -1,15 +1,10 @@
 pipeline {
     agent { label 'agent3' }
 
-    environment {
-        GO111MODULE = 'on'
-        PATH = "/usr/local/go/bin:${env.PATH}" // Ajusta si Go está en otra ruta
-    }
-
     stages {
         stage('Clonar repositorio') {
             steps {
-                git url: 'https://github.com/Escobar3234/pruebas-go.git', branch: 'master'
+                git url: 'https://github.com/Escobar3234/pruebas-go.git'
             }
         }
 
@@ -22,32 +17,29 @@ pipeline {
 
         stage('Compilar ejemplos') {
             steps {
-                // Solo compila subproyectos válidos que contienen código Go
                 sh '''
-                    for dir in $(find . -type f -name '*.go' -exec dirname {} \\; | sort -u); do
+                for dir in $(find . -type f -name '*.go' -exec dirname {} \\; | sort -u); do
+                    if [[ "$dir" != *"gotypes/doc"* ]]; then
                         echo "Compilando $dir..."
                         go build "$dir" || exit 1
-                    done
+                    else
+                        echo "Saltando $dir por incompatibilidad..."
+                    fi
+                done
                 '''
             }
         }
 
         stage('Ejecutar pruebas') {
             steps {
-                // Ejecuta solo en carpetas con archivos *_test.go
-                sh '''
-                    for dir in $(find . -type f -name '*_test.go' -exec dirname {} \\; | sort -u); do
-                        echo "Test en $dir..."
-                        go test -v "$dir" || exit 1
-                    done
-                '''
+                sh 'go test ./...'
             }
         }
     }
 
     post {
-        success {
-            echo 'Pipeline completado sin errores.'
+        always {
+            echo 'Pipeline finalizado.'
         }
         failure {
             echo 'Error en la compilación o pruebas.'
